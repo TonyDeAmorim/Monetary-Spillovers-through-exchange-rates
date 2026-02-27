@@ -1,0 +1,29 @@
+---
+title: "Monetary Spillovers through Echange Rates"
+author: "Tony De Amorim"
+format: pdf
+---
+
+# Library Imports
+```{r}
+#| message: false
+#| warning: false
+#| echo: false
+
+library(ggplot2)
+library(ggthemes)
+library(tidyverse)
+
+```
+
+# Data Imports
+```{r}
+#| message: false
+#| warning: false
+#| echo: false
+
+
+
+```
+
+
