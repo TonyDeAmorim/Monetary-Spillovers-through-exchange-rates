@@ -13,7 +13,11 @@ format: pdf
 library(ggplot2)
 library(ggthemes)
 library(tidyverse)
-
+library(readr)
+library(yfR)
+library(wbstats)
+library(priceR)
+library(patchwork)
 ```
 
 # Data Imports
@@ -22,8 +26,114 @@ library(tidyverse)
 #| warning: false
 #| echo: false
 
-
+USD_GBP_raw <- read_csv("Exchange_rates/USD_GBP.csv")
 
 ```
 
+# Data Cleaning for the Benchmark countries
+
+The goal is to have datasets with exchange rates over the maximum time span available for the following countries :
+- Great_Britain
+- Euro zone
+
+
+```{r}
+#| label: Data import for benchmark
+#| echo: false
+#| message: false
+#| warning: false
+
+USD_GBP <- yf_get(tickers = "GBP=X", 
+                first_date = "1990-01-01", 
+                last_date = Sys.Date(),
+                thresh_bad_data = 0) 
+
+USD_EUR <- yf_get(tickers = "EUR=X", 
+                first_date = "1990-01-01", 
+                last_date = Sys.Date(),
+                thresh_bad_data = 0) 
+
+USD_SGD <- yf_get(tickers = "SGD=X", 
+                first_date = "1990-01-01", 
+                last_date = Sys.Date(),
+                thresh_bad_data = 0)
+
+USD_JPY<- yf_get(tickers = "JPY=X", 
+                first_date = "1990-01-01", 
+                last_date = Sys.Date(),
+                thresh_bad_data = 0)
+
+```
+
+
+```{r}
+#| label: Data cleaning for benchmark
+#| echo: false
+#| message: false
+#| warning: false
+
+USD_EUR <-
+  USD_EUR |> 
+  select(ref_date,price_close) |> 
+  mutate(log_price = log(price_close/lag(price_close))) |> 
+  filter(!is.na(log_price))
+
+USD_GBP <-
+  USD_GBP |> 
+  select(ref_date,price_close) |> 
+  mutate(log_price = log(price_close/lag(price_close))) |> 
+  filter(!is.na(log_price))
+
+USD_SGD <-
+  USD_SGD |> 
+  select(ref_date,price_close) |> 
+  mutate(log_price = log(price_close/lag(price_close))) |> 
+  filter(!is.na(log_price))
+
+
+USD_JPY <-
+  USD_JPY |> 
+  select(ref_date,price_close) |> 
+  mutate(log_price = log(price_close/lag(price_close))) |> 
+  filter(!is.na(log_price))
+
+```
+
+# Data visualisation for benchmark countries
+
+The variations of the rates are obtained using the log transformation ; $$\Delta_{e_i} = log(e_{it} - e_{it-1})$$
+```{r}
+#| label: Data visualisation for benchmark
+#| echo: false
+#| message: false
+#| warning: false
+
+USD_EUR_Var_Plot <-
+  ggplot(USD_EUR, aes(x = ref_date, y = log_price))+
+  geom_line()+
+  theme_clean(base_size = 8) +
+  labs(title = "USD_EUR")
+
+USD_SGD_Var_Plot <-
+  ggplot(USD_SGD, aes(x = ref_date, y = log_price))+
+  geom_line()+
+  theme_clean(base_size = 8)+
+  labs(title = "USD_SGD")
+
+USD_GBP_Var_Plot <-
+  ggplot(USD_GBP, aes(x = ref_date, y = log_price))+
+  geom_line()+
+  theme_clean(base_size = 8)+
+  labs(title = "USD_GBP")
+
+USD_JPY_Var_Plot <-
+  ggplot(USD_JPY, aes(x = ref_date, y = log_price))+
+  geom_line()+
+  theme_clean(base_size = 8)+
+  labs(title = "USD_JPY")
+
+
+(USD_EUR_Var_Plot | USD_GBP_Var_Plot)/(USD_JPY_Var_Plot | USD_SGD_Var_Plot)
+
+```
 
