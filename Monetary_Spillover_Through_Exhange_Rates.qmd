@@ -187,7 +187,7 @@ The country here chosen are :
 - Bolivia (BOB)
 
 ```{r}
-#| label: Data visualisation for Sub-Saharan countries
+#| label: Data visualisation for Central and Latin America
 #| echo: false
 #| message: false
 #| warning: false
@@ -202,6 +202,40 @@ Central_Latin_df <-
 Central_Latin_Plots  <- imap(Central_Latin_df, ~ Var_Plot(.x, .y))
 
 wrap_plots(Central_Latin_Plots, ncol = 3)
+
+
+```
+## Asia
+
+For Asia :
+- China (CNY)
+- India (INR)
+- South Korea (KRW)
+- Indonesia (IDR)
+- Thailand (THB)
+- Malaysia (MYR)
+- Vietnam (VND)
+- Philippines (PHP)
+- Pakistan (PKR)
+- Bangladesh (BDT)
+
+
+```{r}
+#| label: Data visualisation for Asia
+#| echo: false
+#| message: false
+#| warning: false
+
+Asian_Countries <- c("CNY", "JPY", "INR", "KRW", "SGD", "IDR",
+                             "THB", "MYR", "VND", "PHP", "PKR", "BDT")
+
+Asian_df <- 
+  map(Asian_Countries, Import) |> 
+  set_names(str_c("USD_", Asian_Countries))
+
+Asian_Plots  <- imap(Asian_df, ~ Var_Plot(.x, .y))
+
+wrap_plots(Asian_Plots, ncol = 3)
 
 
 ```
@@ -233,8 +267,7 @@ VIX <- yf_get(tickers = "^VIX",
 VIX <-
   VIX |> 
   select(ref_date,price_close) |> 
-  mutate(log_price = log(price_close/lag(price_close)),
-         diff_price = ) |> 
+  mutate(log_price = log(price_close/lag(price_close))) |> 
   filter(!is.na(log_price))
 
 
@@ -254,7 +287,11 @@ VIX_Var_Plot <-
 
 VIX_USD_EUR_Plot <-
   ggplot() +
-  geom_line(data = VIX, aes(x = ref_date, y = log(price_close)), color = "navyblue")
+  geom_line(data = VIX, aes(x = ref_date, y = price_close), color = "navyblue")+
+  theme_clean(base_size = 8)+
+  labs(title = "Evolution of the VIX over the years",
+       x = "Year",
+       y = "Value")
 
 ```
 
