@@ -21,14 +21,17 @@ library(patchwork)
 ```
 
 
-# Data Cleaning for the Benchmark countries
+# Data Cleaning and visualisation for the Benchmark countries
 
 The goal is to have datasets with exchange rates over the maximum time span available for the following countries :
-- Great Britain
-- Euro zone
-- Singapore
-- Japan
-- 
+- Great Britain (GBP)
+- Euro zone (EUR)
+- Singapore (SGD)
+- Japan (JPY)
+- Switzerland (CHF)
+- Australia (AUD)
+- Norway (NOK)
+- Canada (CAD)
 
 
 ```{r}
@@ -67,9 +70,9 @@ Benchmark_df <-
 
 ```
 
-# Data visualisation for benchmark countries
 
 The variations of the rates are obtained using the log transformation ; $$\Delta_{e_i} = log(e_{it} - e_{it-1})$$
+
 ```{r}
 #| label: Data visualisation for benchmark
 #| echo: false
@@ -90,6 +93,70 @@ wrap_plots(Benchmark_Plots, ncol = 3)
 
 
 
+```
+
+# Data Cleaning and visualisation for the Emerging countries
+
+## Sub-saharan countries
+
+The selected countries are the following :
+- Senegal (XOF)
+- Ivory Coast (XOF)
+- Cameroon (XAF)
+- Gabon (XAF)
+- Nigeria (NGN)
+- South Africa (ZAR)
+- Kenya (KES)
+- Ethiopia (ETB)
+- Ghana (GHS)
+- Uganda (UGX)
+- Rwanda (RWF)
+- Mauritius (MUR)
+
+```{r}
+Sub_Saharan_Countries <- c("XOF", "XAF", "NGN", "ZAR", "KES", 
+                           "ETB", "GHS", "UGX", "RWF", "MUR")
+
+Sub_Saharan_df <- 
+  map(Sub_Saharan_Countries, Import) |> 
+  set_names(str_c("USD_", Sub_Saharan_Countries))
+
+Sub_Saharan_Plots  <- imap(Sub_Saharan_df, ~ Var_Plot(.x, .y))
+
+wrap_plots(Sub_Saharan_Plots, ncol = 3)
+
+
+```
+
+We also check for the EUR/. datas due to long lasting colonial relations.
+
+```{r}
+Import_EUR <- function(DEV){
+  Name <- str_c("EUR_", DEV, sep = "")
+  
+  Ticker <- str_c("EUR", DEV, "=X", sep = "")
+  
+  df <- yf_get(tickers = Ticker,
+               first_date = "1990-01-01",
+               last_date = Sys.Date(),
+               thresh_bad_data = 0)
+  
+  df <- df |>
+    select(ref_date, price_close) |>
+    mutate(diff_price = (price_close - lag(price_close))/lag(price_close),
+           log_price = log(price_close/lag(price_close))) |>
+    filter(!is.na(log_price), !is.na(diff_price))
+  
+  return(df)
+}
+
+Sub_Saharan_df_EUR <- 
+  map(Sub_Saharan_Countries, Import_EUR) |> 
+  set_names(str_c("EUR_", Sub_Saharan_Countries))
+
+Sub_Saharan_Plots_EUR  <- imap(Sub_Saharan_df_EUR, ~ Var_Plot(.x, .y))
+
+wrap_plots(Sub_Saharan_Plots_EUR, ncol = 3)
 ```
 
 
