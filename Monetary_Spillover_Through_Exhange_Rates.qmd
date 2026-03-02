@@ -24,15 +24,21 @@ library(patchwork)
 # Data Cleaning for the Benchmark countries
 
 The goal is to have datasets with exchange rates over the maximum time span available for the following countries :
-- Great_Britain
+- Great Britain
 - Euro zone
 - Singapore
-_ Japan
+- Japan
+- 
 
 
 ```{r}
+#| label: Data import for benchmark
+#| echo: false
+#| message: false
+#| warning: false
 
-Benchmark <- c("GBP", "JPY", "EUR", "SGD")
+
+Benchmark <- c("GBP", "JPY", "EUR", "SGD", "CHF", "AUD", "NOK", "CAD")
 
 Import <- function(DEV){
   Name <- str_c("USD_", DEV, sep = "")
@@ -52,75 +58,12 @@ Import <- function(DEV){
          log_price = log(price_close/lag(price_close))) |> 
   filter(!is.na(log_price), !is.na(diff_price))
 
-  assign(Name, df, envir = .GlobalEnv)
+  return(df)
 }
 
-for (i in Benchmark){
-  Import(i)
-}
-
-```
-
-
-```{r}
-#| label: Data import for benchmark
-#| echo: false
-#| message: false
-#| warning: false
-
-USD_GBP <- yf_get(tickers = "GBP=X", 
-                first_date = "1990-01-01", 
-                last_date = Sys.Date(),
-                thresh_bad_data = 0) 
-
-USD_EUR <- yf_get(tickers = "EUR=X", 
-                first_date = "1990-01-01", 
-                last_date = Sys.Date(),
-                thresh_bad_data = 0) 
-
-USD_SGD <- yf_get(tickers = "SGD=X", 
-                first_date = "1990-01-01", 
-                last_date = Sys.Date(),
-                thresh_bad_data = 0)
-
-USD_JPY<- yf_get(tickers = "JPY=X", 
-                first_date = "1990-01-01", 
-                last_date = Sys.Date(),
-                thresh_bad_data = 0)
-
-```
-
-
-```{r}
-#| label: Data cleaning for benchmark
-#| echo: false
-#| message: false
-#| warning: false
-
-USD_EUR <-
-  USD_EUR |> 
-  select(ref_date,price_close) |> 
-  mutate(log_price = log(price_close/lag(price_close))) |> 
-  filter(!is.na(log_price))
-
-USD_GBP <-
-  USD_GBP |> 
-  select(ref_date,price_close) |> 
-  mutate(log_price = log(price_close/lag(price_close))) |> 
-  filter(!is.na(log_price))
-
-USD_SGD <-
-  USD_SGD |> 
-  select(ref_date,price_close) |> 
-  mutate(log_price = log(price_close/lag(price_close))) |> 
-  filter(!is.na(log_price))
-
-
-USD_JPY <-
-  USD_JPY |> 
-  select(ref_date,price_close) |> 
-  mutate(log_price = log(price_close/lag(price_close))) |> 
-  filter(!is.na(log_price))
+Benchmark_df <- 
+  map(Benchmark, Import) |> 
+  set_names(str_c("USD_", Benchmark))
 
 ```
 
@@ -133,34 +76,22 @@ The variations of the rates are obtained using the log transformation ; $$\Delta
 #| message: false
 #| warning: false
 
-USD_EUR_Var_Plot <-
-  ggplot(USD_EUR, aes(x = ref_date, y = log_price))+
-  geom_line()+
-  theme_clean(base_size = 8) +
-  labs(title = "USD_EUR")
 
-USD_SGD_Var_Plot <-
-  ggplot(USD_SGD, aes(x = ref_date, y = log_price))+
-  geom_line()+
-  theme_clean(base_size = 8)+
-  labs(title = "USD_SGD")
+Var_Plot <- function(df, name) {
+  ggplot(df, aes(x = ref_date, y = log_price)) +
+    geom_line() +
+    theme_clean(base_size = 8) +
+    labs(title = name)
+}
 
-USD_GBP_Var_Plot <-
-  ggplot(USD_GBP, aes(x = ref_date, y = log_price))+
-  geom_line()+
-  theme_clean(base_size = 8)+
-  labs(title = "USD_GBP")
+Benchmark_Plots  <- imap(Benchmark_df, ~ Var_Plot(.x, .y))
 
-USD_JPY_Var_Plot <-
-  ggplot(USD_JPY, aes(x = ref_date, y = log_price))+
-  geom_line()+
-  theme_clean(base_size = 8)+
-  labs(title = "USD_JPY")
+wrap_plots(Benchmark_Plots, ncol = 3)
 
 
-(USD_EUR_Var_Plot | USD_GBP_Var_Plot)/(USD_JPY_Var_Plot | USD_SGD_Var_Plot)
 
 ```
+
 
 # Visualisation an cleaning for the VIX
 
