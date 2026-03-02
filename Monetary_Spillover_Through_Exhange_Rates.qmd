@@ -4,6 +4,10 @@ author: "Tony De Amorim"
 format: pdf
 ---
 
+This project serves a precise goal : developing a precise, extensive and easily replicable toolkit for any work on exchange rates and monetary policy. Knowing how challenging finding appropriate data may be sometimes, this work aims at providing all the information, ready for use.  
+
+To keep it interesting, I still decided to follow a research question : how to model spillover effects of FED's monetary policy on emerging markets. Although the literature is pretty complete on the subject, I do think that recent global trend appeal for deeper work on the subject. Different questions could be developed and some are listed here. 
+
 # Library Imports
 ```{r}
 #| message: false
@@ -24,6 +28,7 @@ library(patchwork)
 # Data Cleaning and visualisation for the Benchmark countries
 
 The goal is to have datasets with exchange rates over the maximum time span available for the following countries :
+
 - Great Britain (GBP)
 - Euro zone (EUR)
 - Singapore (SGD)
@@ -100,6 +105,7 @@ wrap_plots(Benchmark_Plots, ncol = 3)
 ## Sub-saharan countries
 
 The selected countries are the following :
+
 - Senegal (XOF)
 - Ivory Coast (XOF)
 - Cameroon (XAF)
@@ -173,6 +179,7 @@ wrap_plots(Sub_Saharan_Plots_EUR, ncol = 3)
 ## Latin and Central America
 
 The country here chosen are :
+
 - Brazil (BRL)
 - Mexico (MXN)
 - Chile (CLP)
@@ -208,6 +215,7 @@ wrap_plots(Central_Latin_Plots, ncol = 3)
 ## Asia
 
 For Asia :
+
 - China (CNY)
 - India (INR)
 - South Korea (KRW)
@@ -242,6 +250,7 @@ wrap_plots(Asian_Plots, ncol = 3)
 
 # Visualisation an cleaning for the VIX
 
+The VIX index is of prominent use in the literature to model uncertainty on the global market. Following its evolution helps identifying shocks by looking at investors' overall feeling for the market. 
 
 ```{r}
 #| label: Data import for VIX
@@ -283,15 +292,85 @@ VIX_Var_Plot <-
   ggplot(VIX, aes(x = ref_date, y = log_price))+
   geom_line()+
   theme_clean(base_size = 8)+
-  labs(title = "VIX")
+  labs(title = "Volatility of the VIX over the years",
+       x = "Year",
+       y = "Value")
 
 VIX_USD_EUR_Plot <-
   ggplot() +
-  geom_line(data = VIX, aes(x = ref_date, y = price_close), color = "navyblue")+
+  geom_line(data = VIX, aes(x = ref_date, y = price_close))+
   theme_clean(base_size = 8)+
   labs(title = "Evolution of the VIX over the years",
        x = "Year",
        y = "Value")
 
+VIX_USD_EUR_Plot / VIX_Var_Plot
+```
+
+It also could be interesting to represent the relation between a refuge currency like the CHF and the VIX :
+
+```{r}
+#| label: VIX against CHF
+#| echo: false
+#| message: false
+#| warning: false
+
+
+ggplot() +
+  geom_line(data = Benchmark_df[["USD_CHF"]], 
+            aes(x = ref_date, y = (price_close - min(price_close))/(max(price_close)-min(price_close))), 
+            color = "darkblue") +
+  geom_line(data = VIX |> 
+              filter(ref_date >= "2003-09-17"), 
+            aes(x = ref_date, y = (price_close - min(price_close))/(max(price_close)-min(price_close))), 
+            color = "lightblue")+
+  theme_clean(base_size = 8)+
+  labs(title = "Evolution of the VIX over the years vs the USD/CHF",
+       x = "Year",
+       y = "Value")
+```
+
+# Average comparisons
+
+```{r}
+
+Mean_df <- c("Benchmark_df", "Asian_df", 
+             "Central_Latin_df", "Sub_Saharan_df")
+
+for (i in Mean_df){
+  df <- get(i)
+  Mean_Name = str_c(i, "_mean")
+  Mean <- Mean_Name 
+  Mean <-
+    df |> 
+    bind_rows(.id = "currency") |>
+  group_by(ref_date) |>
+  summarise(mean_log_price_benchmark = mean(log_price, na.rm = TRUE))
+  assign(Mean_Name, Mean, envir = .GlobalEnv)
+}
+
+
+Mean_dfs_list <- 
+  list(
+  Benchmark = Benchmark_df_mean,
+  Asian = Asian_df_mean,
+  Central_Latin = Central_Latin_df_mean,
+  Sub_Saharan = Sub_Saharan_df_mean
+)
+
+merged_means <- 
+  Mean_dfs_list |>
+  reduce(full_join, by = "ref_date") |>
+  setNames(c("ref_date", names(Mean_dfs_list)))
+
+ggplot(merged_means, aes(x = ref_date))+
+  geom_line(aes(y = Benchmark), color = "darkblue")+
+  geom_line(aes(y = Asian), color = "yellow")+
+  geom_line(aes(y = Central_Latin), color = "red")+
+  geom_line(aes(y = Sub_Saharan), color = "orange")+
+  theme_clean(base_size = 8)+
+  labs(title = "Mean variations over the years",
+       x = "Year",
+       y = "Value")
 ```
 
