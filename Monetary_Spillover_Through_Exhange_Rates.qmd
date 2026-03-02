@@ -114,6 +114,11 @@ The selected countries are the following :
 - Mauritius (MUR)
 
 ```{r}
+#| label: Data visualisation for Sub-Saharan countries
+#| echo: false
+#| message: false
+#| warning: false
+
 Sub_Saharan_Countries <- c("XOF", "XAF", "NGN", "ZAR", "KES", 
                            "ETB", "GHS", "UGX", "RWF", "MUR")
 
@@ -131,6 +136,12 @@ wrap_plots(Sub_Saharan_Plots, ncol = 3)
 We also check for the EUR/. datas due to long lasting colonial relations.
 
 ```{r}
+#| label: Data visualisation for Sub-Saharan countries versus the Euro
+#| echo: false
+#| message: false
+#| warning: false
+
+
 Import_EUR <- function(DEV){
   Name <- str_c("EUR_", DEV, sep = "")
   
@@ -159,6 +170,41 @@ Sub_Saharan_Plots_EUR  <- imap(Sub_Saharan_df_EUR, ~ Var_Plot(.x, .y))
 wrap_plots(Sub_Saharan_Plots_EUR, ncol = 3)
 ```
 
+## Latin and Central America
+
+The country here chosen are :
+- Brazil (BRL)
+- Mexico (MXN)
+- Chile (CLP)
+- Colombia (COP)
+- Peru (PEN)
+- Argentina (ARS)
+- Uruguay (UYU)
+- Costa Rica (CRC)
+- Dominican Republic (DOP)
+- Guatemala (GTQ)
+- Paraguay (PYG)
+- Bolivia (BOB)
+
+```{r}
+#| label: Data visualisation for Sub-Saharan countries
+#| echo: false
+#| message: false
+#| warning: false
+
+Central_Latin_Countries <- c("BRL", "MXN", "CLP", "COP", "PEN", "ARS",
+                           "UYU", "CRC", "DOP", "GTQ", "PYG", "BOB")
+
+Central_Latin_df <- 
+  map(Central_Latin_Countries, Import) |> 
+  set_names(str_c("USD_", Central_Latin_Countries))
+
+Central_Latin_Plots  <- imap(Central_Latin_df, ~ Var_Plot(.x, .y))
+
+wrap_plots(Central_Latin_Plots, ncol = 3)
+
+
+```
 
 # Visualisation an cleaning for the VIX
 
@@ -208,8 +254,7 @@ VIX_Var_Plot <-
 
 VIX_USD_EUR_Plot <-
   ggplot() +
-  geom_line(data = VIX, aes(x = ref_date, y = log(price_close)), color = "navyblue")+
-  geom_line(data = USD_EUR, aes(x=ref_date, y = 3*log(price_close)), color = "yellow")
+  geom_line(data = VIX, aes(x = ref_date, y = log(price_close)), color = "navyblue")
 
 ```
 
