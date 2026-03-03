@@ -22,6 +22,7 @@ library(yfR)
 library(wbstats)
 library(priceR)
 library(patchwork)
+library(olsrr)
 ```
 
 
@@ -333,6 +334,11 @@ ggplot() +
 # Average comparisons
 
 ```{r}
+#| label: Mean ploting by region
+#| echo: false
+#| message: false
+#| warning: false
+
 
 Mean_df <- c("Benchmark_df", "Asian_df", 
              "Central_Latin_df", "Sub_Saharan_df")
@@ -363,14 +369,110 @@ merged_means <-
   reduce(full_join, by = "ref_date") |>
   setNames(c("ref_date", names(Mean_dfs_list)))
 
-ggplot(merged_means, aes(x = ref_date))+
+Benchmark_Mean_Plot<- 
+  ggplot(merged_means, aes(x = ref_date))+
   geom_line(aes(y = Benchmark), color = "darkblue")+
-  geom_line(aes(y = Asian), color = "yellow")+
-  geom_line(aes(y = Central_Latin), color = "red")+
-  geom_line(aes(y = Sub_Saharan), color = "orange")+
   theme_clean(base_size = 8)+
-  labs(title = "Mean variations over the years",
+  labs(title = "Mean variations over the years : Benchmark",
        x = "Year",
        y = "Value")
+
+Asian_Mean_Plot<- 
+  ggplot(merged_means, aes(x = ref_date))+
+  geom_line(aes(y = Asian), color = "yellow")+
+  theme_clean(base_size = 8)+
+  labs(title = "Mean variations over the years : Asia",
+       x = "Year",
+       y = "Value")
+
+Central_Latin_Mean_Plot <- 
+  ggplot(merged_means, aes(x = ref_date))+
+  geom_line(aes(y = Central_Latin), color = "red")+
+  theme_clean(base_size = 8)+
+  labs(title = "Mean variations over the years : Americas",
+       x = "Year",
+       y = "Value")
+
+Sub_Saharan_Mean_Plot <- 
+  ggplot(merged_means, aes(x = ref_date))+
+  geom_line(aes(y = Sub_Saharan), color = "orange")+
+  theme_clean(base_size = 8)+
+  labs(title = "Mean variations over the years : Sub Sahara",
+       x = "Year",
+       y = "Value")
+
+(Benchmark_Mean_Plot | Asian_Mean_Plot) / (Central_Latin_Mean_Plot | Sub_Saharan_Mean_Plot)
+
+ 
 ```
+
+# Differentiating by exchange regime
+
+The classification is as follow :
+
+- Strictly pegged : "XOF", "XAF"
+- Free floaters : "ZAR", "GBP", "JPY", "EUR", "CHF", "AUD", "NOK", "CAD", "BRL", "MXN", "CLP", "COP", "PEN"
+- Managed Float : "NGN", "KES", "GHS", "UGX", "RWF", "MUR", "SGD", "INR", "KRW", "IDR", "THB", "MYR", "PHP", "PKR", "BDT", "UYU", "CRC", "DOP", "GTQ", "PYG"
+- Crawling Peg / Stabilized : "ETB", "CNY", "VND", "ARS", "BOB"
+
+```{r}
+#| label: Differentiating by regime of change
+#| echo: false
+#| message: false
+#| warning: false
+
+
+Strictly_Pegged <- c("XOF", "XAF")
+
+Free_Floating <- c("ZAR", "GBP", "JPY", "EUR", "CHF", "AUD", "NOK",
+                   "CAD", "BRL", "MXN", "CLP", "COP", "PEN")
+
+Managed_Float <- c("NGN", "KES", "GHS", "UGX", "RWF", "MUR", "SGD",
+                   "INR", "KRW", "IDR", "THB", "MYR", "PHP", "PKR",
+                   "BDT", "UYU", "CRC", "DOP", "GTQ", "PYG")
+
+Crawling_peg_stabilized <- c("ETB", "CNY", "VND", "ARS", "BOB")
+
+
+
+
+
+```
+
+# Data cleaning and visualisation for the FED Funds Rate
+
+```{r}
+#| label: Data cleaning and visualisation for the FED Funds Rate
+#| echo: false
+#| message: false
+#| warning: false
+
+
+FFR <- yf_get(tickers = "^IRX", 
+                first_date = "1990-01-01", 
+                last_date = Sys.Date(),
+                thresh_bad_data = 0)
+
+FFR <-
+  FFR |> 
+  select(ref_date,price_close) |> 
+  mutate(diff_price = (price_close - lag(price_close))/lag(price_close),
+         log_price = log(price_close/lag(price_close))) |> 
+  filter(!is.na(log_price), !is.na(diff_price))
+
+FFR_Value_Plot<- 
+  ggplot(FFR, aes(x = ref_date, y = price_close))+
+  geom_line()+
+  theme_clean(base_size = 8)+
+  labs(title = "FED Fund Rate over the years")
+
+FFR_Variation_Plot <-
+  ggplot(FFR, aes(x =ref_date, y = log_price))+
+  geom_line()+
+  theme_clean(base_size = 8)+
+  labs(title = "FED Fund Rate variations over the years")
+
+FFR_Value_Plot / FFR_Variation_Plot 
+```
+
 
