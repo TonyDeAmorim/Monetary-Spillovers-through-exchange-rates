@@ -2,5 +2,29 @@
 title: "Exchange volatility in times of uncertainty : is fear of floating still dominant in emerging economies ?"
 author: "Tony De Amorim"
 format: pdf
+bibliography: FOF2.bib
+csl: apa.csl
 ---
 
+# Introduction
+
+Consistent with the work of @calvo2002fear, this essay investigates whether Emerging Markets Economies (EMEs)[^1] continue to exhibit a "Fear of Floating" during periods of global financial instability. Specifically, it examines the propensity of these nations to stabilize their exchange rates, *de facto* pegging it, to mitigate adverse macroeconomic consequences. While this work is not presented as a formal working paper, it presents graphical representations and concise analytical frameworks to make these sometimes complex economic concepts accessible to a broader audience.
+
+In the original literature, "fear of floating" is characterized as a pervasive phenomenon where EMEs, despite officially adopting flexible exchange rate regimes, remain highly sensitive to currency fluctuations due to concerns regarding dollar-denominated debt and inflationary pressures. Given that this foundational research predates the COVID-19 pandemic and subsequent inflationary shocks, the persistence of such behavior twenty years later remains a critical empirical question. By benchmarking a panel of EMEs against major free-floating currencies, we analyze exchange rate variance during crises.
+
+The structure of this paper is as follows: first, we employ two proxies for market uncertainty (the FED Funds Rate and the VIX) to identify periods of economical distress. Second, we present comparative graphical evidence for both the benchmark and EME groups. Finally, we offer a brief analysis followed by a succinct econometric model to explore the causal links between global shocks and the reactions of national currencies. 
+
+# Identifying periods of economical distress
+
+As our focus is on EMEs in periods of crisis, it is necessary to identify appropriate proxies for global macroeconomic disturbances. The VIX[^2], an index measuring the market’s expectation of 30-day volatility based on S&P 500 options, has been used in the literature to approximate global financial risk (see @miranda2020us). A spike in the VIX signifies higher expectations of volatility and, by extension, a climate of financial distress, as investors demand higher premiums for risk and additional financial protection. 
+
+
+
+
+[^1]: Let us borrow here the wording used in @ahmed2022monetary, which is useful in both its simplicity and clarity.
+
+[^2]: Statistical measure of the dispersion of returns for a given market index, representing the degree of variation in trading prices over a specific period.
+
+\newpage
+
+# Bibliography
