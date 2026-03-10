@@ -1,12 +1,12 @@
 ---
-title: "Monetary Spillovers through Echange Rates"
+title: "Monetary Spillovers through Exchange Rates"
 author: "Tony De Amorim"
 format: pdf
 ---
 
 This project serves a precise goal : developing a precise, extensive and easily replicable toolkit for any work on exchange rates and monetary policy. Knowing how challenging finding appropriate data may be sometimes, this work aims at providing all the information, ready for use.  
 
-To keep it interesting, I still decided to follow a research question : how to model spillover effects of FED's monetary policy on emerging markets. Although the literature is pretty complete on the subject, I do think that recent global trend appeal for deeper work on the subject. Different questions could be developed and some are listed here. 
+To keep it interesting, I still decided to follow a research question : how to model spillover effects of FED's monetary policy on emerging markets. Although the literature is pretty complete on the subject, I do think that recent global trends appeal for deeper work on the subject. 
 
 # Library Imports
 ```{r}
@@ -249,88 +249,6 @@ wrap_plots(Asian_Plots, ncol = 3)
 
 ```
 
-# Visualisation an cleaning for the VIX
-
-The VIX index is of prominent use in the literature to model uncertainty on the global market. Following its evolution helps identifying shocks by looking at investors' overall feeling for the market. 
-
-```{r}
-#| label: Data import for VIX
-#| echo: false
-#| message: false
-#| warning: false
-
-VIX <- yf_get(tickers = "^VIX", 
-                first_date = "1990-01-01", 
-                last_date = Sys.Date(),
-                thresh_bad_data = 0) 
-
-
-
-```
-
-```{r}
-#| label: Data cleaning for VIX
-#| echo: false
-#| message: false
-#| warning: false
-
-VIX <-
-  VIX |> 
-  select(ref_date,price_close) |> 
-  mutate(log_price = log(price_close/lag(price_close))) |> 
-  filter(!is.na(log_price))
-
-
-```
-
-```{r}
-#| label: Data visualisation for VIX
-#| echo: false
-#| message: false
-#| warning: false
-
-VIX_Var_Plot <-
-  ggplot(VIX, aes(x = ref_date, y = log_price))+
-  geom_line()+
-  theme_clean(base_size = 8)+
-  labs(title = "Volatility of the VIX over the years",
-       x = "Year",
-       y = "Value")
-
-VIX_USD_EUR_Plot <-
-  ggplot() +
-  geom_line(data = VIX, aes(x = ref_date, y = price_close))+
-  theme_clean(base_size = 8)+
-  labs(title = "Evolution of the VIX over the years",
-       x = "Year",
-       y = "Value")
-
-VIX_USD_EUR_Plot / VIX_Var_Plot
-```
-
-It also could be interesting to represent the relation between a refuge currency like the CHF and the VIX :
-
-```{r}
-#| label: VIX against CHF
-#| echo: false
-#| message: false
-#| warning: false
-
-
-ggplot() +
-  geom_line(data = Benchmark_df[["USD_CHF"]], 
-            aes(x = ref_date, y = (price_close - min(price_close))/(max(price_close)-min(price_close))), 
-            color = "darkblue") +
-  geom_line(data = VIX |> 
-              filter(ref_date >= "2003-09-17"), 
-            aes(x = ref_date, y = (price_close - min(price_close))/(max(price_close)-min(price_close))), 
-            color = "lightblue")+
-  theme_clean(base_size = 8)+
-  labs(title = "Evolution of the VIX over the years vs the USD/CHF",
-       x = "Year",
-       y = "Value")
-```
-
 # Average comparisons
 
 ```{r}
@@ -369,41 +287,32 @@ merged_means <-
   reduce(full_join, by = "ref_date") |>
   setNames(c("ref_date", names(Mean_dfs_list)))
 
-Benchmark_Mean_Plot<- 
-  ggplot(merged_means, aes(x = ref_date))+
-  geom_line(aes(y = Benchmark), color = "darkblue")+
-  theme_clean(base_size = 8)+
-  labs(title = "Mean variations over the years : Benchmark",
-       x = "Year",
-       y = "Value")
+df_names <- c("Benchmark" = "Benchmark_df", 
+              "Asian" = "Asian_df", 
+              "Central_Latin" = "Central_Latin_df", 
+              "Sub_Saharan" = "Sub_Saharan_df")
 
-Asian_Mean_Plot<- 
-  ggplot(merged_means, aes(x = ref_date))+
-  geom_line(aes(y = Asian), color = "yellow")+
-  theme_clean(base_size = 8)+
-  labs(title = "Mean variations over the years : Asia",
-       x = "Year",
-       y = "Value")
+merged_means <- map_dfr(df_names, ~ {
+  get(.x) |> 
+    bind_rows(.id = "currency") |> 
+    group_by(ref_date) |> 
+    summarise(mean_val = mean(log_price, na.rm = TRUE))
+}, .id = "region")
 
-Central_Latin_Mean_Plot <- 
-  ggplot(merged_means, aes(x = ref_date))+
-  geom_line(aes(y = Central_Latin), color = "red")+
-  theme_clean(base_size = 8)+
-  labs(title = "Mean variations over the years : Americas",
-       x = "Year",
-       y = "Value")
+Mean_plots <- ggplot(merged_means, aes(x = ref_date, y = mean_val, color = region)) +
+  geom_line() +
+  facet_wrap(~region, scales = "free_y", labeller = as_labeller(c(
+    "Benchmark" = "Mean variations over the years : Benchmark",
+    "Asian" = "Mean variations over the years : Asia",
+    "Central_Latin" = "Mean variations over the years : Americas",
+    "Sub_Saharan" = "Mean variations over the years : Sub Sahara"
+  ))) +
+  theme_clean(base_size = 8) +
+  theme(legend.position = "none") +
+  labs(x = "Year", y = "Value")
 
-Sub_Saharan_Mean_Plot <- 
-  ggplot(merged_means, aes(x = ref_date))+
-  geom_line(aes(y = Sub_Saharan), color = "orange")+
-  theme_clean(base_size = 8)+
-  labs(title = "Mean variations over the years : Sub Sahara",
-       x = "Year",
-       y = "Value")
+Mean_plots
 
-(Benchmark_Mean_Plot | Asian_Mean_Plot) / (Central_Latin_Mean_Plot | Sub_Saharan_Mean_Plot)
-
- 
 ```
 
 # Differentiating by exchange regime
@@ -441,38 +350,63 @@ Crawling_peg_stabilized <- c("ETB", "CNY", "VND", "ARS", "BOB")
 
 # Data cleaning and visualisation for the FED Funds Rate
 
+
 ```{r}
-#| label: Data cleaning and visualisation for the FED Funds Rate
+#| label: Data cleaning and visualisation for Variables of Interests
 #| echo: false
 #| message: false
 #| warning: false
 
+Var_of_Interest <- c("^IRX", "^TNX", "^VIX")
+Var_of_Interest_Names <- c("FFR", "10Y_US_Bond_Yield", "VIX")
 
-FFR <- yf_get(tickers = "^IRX", 
+Import_Var <- function(CODE){
+  
+  df <- yf_get(tickers = CODE, 
                 first_date = "1990-01-01", 
                 last_date = Sys.Date(),
                 thresh_bad_data = 0)
-
-FFR <-
-  FFR |> 
+  df <-
+  df |> 
   select(ref_date,price_close) |> 
   mutate(diff_price = (price_close - lag(price_close))/lag(price_close),
          log_price = log(price_close/lag(price_close))) |> 
   filter(!is.na(log_price), !is.na(diff_price))
 
-FFR_Value_Plot<- 
-  ggplot(FFR, aes(x = ref_date, y = price_close))+
-  geom_line()+
-  theme_clean(base_size = 8)+
-  labs(title = "FED Fund Rate over the years")
+  return(df)
+}
 
-FFR_Variation_Plot <-
-  ggplot(FFR, aes(x =ref_date, y = log_price))+
-  geom_line()+
-  theme_clean(base_size = 8)+
-  labs(title = "FED Fund Rate variations over the years")
-
-FFR_Value_Plot / FFR_Variation_Plot 
+Var_of_Interest_df <- 
+  map(Var_of_Interest, Import_Var) |> 
+  set_names(Var_of_Interest_Names)
 ```
 
+```{r}
+#| echo: false
+#| message: false
+#| warning: false
+ggplot() +
+  geom_line(data = Var_of_Interest_df[["10Y_US_Bond_Yield"]],
+            aes(x = ref_date, y = price_close, color = "10Y US Bond Yield")) +
+  geom_line(data = Var_of_Interest_df[["FFR"]],
+            aes(x = ref_date, y = price_close, color = "FFR"))+
+  theme_clean(base_size = 8)
+
+
+```
+
+```{r}
+
+First_OLS <- 
+  Var_of_Interest_df[["10Y_US_Bond_Yield"]] |>
+  full_join(Var_of_Interest_df[["FFR"]], by = "ref_date") |> 
+  select(ref_date, price_close.x, price_close.y) |> 
+  rename("Bond_Yield"= price_close.x ,
+          "FFR" = price_close.y)
+
+model <- lm(Bond_Yield ~ FFR, data = First_OLS)
+ols_reg_results <- ols_regress(model)
+print(ols_reg_results)
+
+```
 

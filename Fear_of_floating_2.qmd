@@ -1,0 +1,6 @@
+---
+title: "Exchange volatility in times of uncertainty : is fear of floating still dominant in emerging economies ?"
+author: "Tony De Amorim"
+format: pdf
+---
+
