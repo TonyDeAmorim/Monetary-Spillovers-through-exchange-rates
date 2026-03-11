@@ -6,6 +6,66 @@ bibliography: FOF2.bib
 csl: apa.csl
 ---
 
+```{r}
+#| label: library import
+#| echo: false
+#| message: false
+#| warning: false
+
+library(ggplot2)
+library(ggthemes)
+library(tidyverse)
+library(readr)
+library(yfR)
+library(wbstats)
+library(priceR)
+library(patchwork)
+library(olsrr)
+```
+
+```{r}
+#| label: Import function
+#| echo: false
+#| message: false
+#| warning: false
+
+Import <- function(X, date){
+  
+  df <- X
+  
+  Ticker <- X
+  
+  df <- yf_get(tickers = Ticker, 
+                first_date = date, 
+                last_date = Sys.Date(),
+                thresh_bad_data = 0)
+  df <-
+  df |> 
+  select(ref_date,price_close) |> 
+  mutate(diff_price = (price_close - lag(price_close))/lag(price_close),
+         log_price = log(price_close/lag(price_close))) |> 
+  filter(!is.na(log_price), !is.na(diff_price))
+
+  return(df)
+}
+```
+
+```{r}
+#| label: Var Plot function
+#| echo: false
+#| message: false
+#| warning: false
+
+Var_Plot <- 
+  function(df, y, Title) {
+  ggplot(df, aes(x =ref_date, y = {{y}})) +
+    geom_line() +
+    theme_clean(base_size = 8)+
+    labs(title = Title,
+         x = "Year")
+}
+```
+
 # Introduction
 
 Consistent with the work of @calvo2002fear, this essay investigates whether Emerging Markets Economies (EMEs)[^1] continue to exhibit a "Fear of Floating" during periods of global financial instability. Specifically, it examines the propensity of these nations to stabilize their exchange rates, *de facto* pegging it, to mitigate adverse macroeconomic consequences. While this work is not presented as a formal working paper, it presents graphical representations and concise analytical frameworks to make these sometimes complex economic concepts accessible to a broader audience.
@@ -16,15 +76,43 @@ The structure of this paper is as follows: first, we employ two proxies for mark
 
 # Identifying periods of economical distress
 
-As our focus is on EMEs in periods of crisis, it is necessary to identify appropriate proxies for global macroeconomic disturbances. The VIX[^2], an index measuring the market’s expectation of 30-day volatility based on S&P 500 options, has been used in the literature to approximate global financial risk (see @miranda2020us). A spike in the VIX signifies higher expectations of volatility and, by extension, a climate of financial distress, as investors demand higher premiums for risk and additional financial protection. 
+As our focus is on EMEs in periods of crisis, it is necessary to identify appropriate proxies for global macroeconomic disturbances. The VIX[^2], an index measuring the market’s expectation of 30-day volatility based on S&P 500 options, has been used in the literature to approximate global financial risk (see @miranda2020us). A spike in the VIX signifies higher expectations of volatility and, by extension, a climate of financial distress, as investors demand higher premiums for risk and additional financial protection. Simultaneously, the Federal Funds Rate (FFR)[^3] serves as a critical indicator of U.S. monetary policy stance. The spillover effects of Fed policy on emerging economies have been debated for decades (@arora2001how; @hou2025spillover) and are recognized as a primary source of external shocks for EMEs.
+
+```{r}
+#| label: fig-VIX-evolution
+#| fig-cap: "Comparative Evolution of the VIX and the FFR"
+#| echo: false
+#| message: false
+#| warning: false
+
+VIX <- Import("^VIX", "2006-01-01")
+FFR <- Import("^IRX", "2006-01-01")
+
+VIX_Plot <- Var_Plot(VIX,price_close, "Evolution of the VIX over the years")
+FFR_Plot <- Var_Plot(FFR, price_close, "Evolution of the FFR over the years")
+VIX_Var_Plot <- Var_Plot(VIX, log_price, "Variation of the VIX over the years")
+FFR_Var_Plot <- Var_Plot(FFR, log_price, "Variation of the FFR over the years")
+
+(VIX_Plot | FFR_Plot) / (VIX_Var_Plot | FFR_Var_Plot)
+```
 
 
+As illustrated in @fig-VIX-evolution, both the VIX and the FFR exhibit significant fluctuations during periods of systemic stress. In 2008 during the financial then economical crisis, the FED decreased its rate at a rapid pace to mitigate the effects of the financial bubble explosion. In parallel, the VIX spiked at unprecedented heights, showcasing the widely spread fear that took over the market during that period. Similarly, the same two trends happened in 2020 with the pandemic crisis (even if the VIX reaction was less disproportionate at that time).
 
+During the 2008 Global Financial Crisis, the Federal Reserve aggressively lowered the FFR to mitigate the collapse of the housing bubble and support liquidity. In parallel, the VIX spiked to unprecedented levels, reflecting the pervasive systemic fear that characterized the period. A similar pattern emerged during the 2020 COVID-19 pandemic; while the Fed returned to the zero lower bound to stabilize the economy, the VIX surged, albeit with a shorter duration of extreme volatility compared to the 2008 episode. These inverse movements highlight the interplay between U.S. policy responses and global risk perception.
 
-[^1]: Let us borrow here the wording used in @ahmed2022monetary, which is useful in both its simplicity and clarity.
+# Benchmark countries
 
-[^2]: Statistical measure of the dispersion of returns for a given market index, representing the degree of variation in trading prices over a specific period.
+To represent the impact of global financial crisis on EMES, we use a benchmark of countries listed as free floaters by the IMF[^4] and with strong currencies. We study the exchange rates of those countries (with their currency against the US Dollar) and precisely, the log-variation of the exchange rate, computed as follow : 
+$$
+\Delta_{e_i} = log(e_{it} - e_{it-1})
+$$
+Where $$e_{it}$$ is the exchange rate of country $$i$$ against the USD at time $$t$$. This transformation is useful as it highlights the main period of appreciation or depreciation, specifically during our time span of study (2016 - 2024).  
 
 \newpage
 
 # Bibliography
+
+[^1]: Let us borrow here the wording used in @ahmed2022monetary, which is useful in both its simplicity and clarity.
+
+[^2]: Statistical measure of the dispersion of returns for a given market index, representing the degree of variation in trading prices over a specific period.
