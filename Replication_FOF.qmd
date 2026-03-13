@@ -1,0 +1,199 @@
+---
+title: "Fear of Floating (Calvo and Reinhart, 2002): A Modern Perspective"
+author: "Tony De Amorim"
+abstract: |
+  This essay investigates the persistence of "Fear of Floating" behavior in Emerging Market Economies (EMEs) two decades after the seminal work of Calvo and Reinhart (2002).
+format:
+  pdf:
+    geometry:
+      - left=20mm   
+      - right=20mm  
+      - top=25mm    
+      - bottom=25mm 
+    papersize: a4
+    number-sections: true
+    fig-pos: 'H'
+    fontsize: 11pt
+    interlinespacing: 1.5
+bibliography: FOF2.bib
+csl: apa.csl
+---
+
+```{r}
+#| label: library import
+#| echo: false
+#| message: false
+#| warning: false
+
+library(ggplot2)
+library(ggthemes)
+library(tidyverse)
+library(readr)
+library(yfR)
+library(wbstats)
+library(priceR)
+library(patchwork)
+library(olsrr)
+library(yfR)
+library(zoo)
+library(knitr)
+library(kableExtra)
+library(readr)
+```
+
+```{r}
+#| label: Import for devise function
+#| echo: false
+#| message: false
+#| warning: false
+
+
+Import_DEV <- function(DEV) {
+  Ticker <- str_c(DEV, "=X")
+
+  df <- yf_get(
+    tickers = Ticker,
+    first_date = "2010-01-01",
+    last_date = "2018-01-01",
+    thresh_bad_data = 0
+  )
+
+  df <- df |>
+    select(ref_date, price_close) |>
+    mutate(month = floor_date(ref_date, "month")) |>
+    group_by(month) |>
+    slice_tail(n = 1) |>
+    ungroup() |>
+    mutate(
+      diff_price = ((price_close - lag(price_close)) / lag(price_close)) * 100,
+      country = str_c("USD_", DEV)
+    ) |>
+    filter(!is.na(diff_price)) |>
+    select(month, country, diff_price)
+
+  return(df)
+}
+```
+
+```{r}
+#| label: Var plot dev function
+#| echo: false
+#| message: false
+#| warning: false
+
+Var_Plot_DEV <- function(df, name) {
+  ggplot(df, aes(x = month, y = .data[[name]])) +
+    geom_line() +
+    geom_hline(yintercept = 2.5, linetype = "dashed", color = "red", alpha = 0.6) +
+    geom_hline(yintercept = -2.5, linetype = "dashed", color = "red", alpha = 0.6) +
+    theme_clean(base_size = 8) +
+    labs(
+      title = name,
+      y = "Variation (%)",
+      x = "Date"
+    )
+}
+```
+
+# Introduction
+
+Consistent with the work of @calvo2002fear, this essay investigates whether Emerging Markets Economies (EMEs)[^1] continue to exhibit a "Fear of Floating" in a modern context. Specifically, it examines the propensity of these nations to stabilize their exchange rates, *de facto* pegging it, to mitigate adverse macroeconomic consequences. While this work is not presented as a formal working paper, it presents graphical representations and concise analytical frameworks to make these sometimes complex economic concepts accessible to a broader audience.
+
+In the original literature, "fear of floating" is characterized as a pervasive phenomenon where EMEs, despite officially adopting flexible exchange rate regimes, remain highly sensitive to currency fluctuations due to concerns regarding dollar-denominated debt and inflationary pressures. Given that this foundational research predates the COVID-19 pandemic and subsequent inflationary shocks, the persistence of such behavior twenty years later remains a critical empirical question. By benchmarking a panel of EMEs against major free-floating currencies, we analyze exchange rate variance, comparing declared exchange regime to the realty.
+
+The structure of this paper is as follows: 
+
+# Identifiyng Exchange Regimes
+
+To investigate the persistence of "Fear of Floating," we construct our sample by cross-referencing the seminal country list of @calvo2002fear with the IMF AREAER database (@imf2024areaer). We select economies that have maintained a de facto classification of either "floating" or "free floating" for a minimum of five consecutive years between 2008 and 2023, selecting the most recent available data. This dual-category approach allows us to distinguish between advanced economies with minimal intervention and emerging markets that may exhibit managed volatility. The resulting sample and their respective periods of classification are detailed in @tbl-Exchange-Rates-Regime.
+Interpretation of Table 1
+
+The distribution of regimes in @tbl-Exchange-Rates-Regime reveals a significant split in global monetary practices. Advanced economies such as the United Kingdom (GBP), Canada (CAD), and the Euro Area (Germany) consistently maintain a "Free Floating" status. This group serves as a control for "pure" exchange rate flexibility. Several countries (e.g., Indonesia, Mexico, Chile) are categorized as free floaters but often do so after periods of managed regimes. The "Floating" category is dominated by Emerging Market Economies (EMEs) such as Brazil, India, and Peru. According to IMF criteria, these nations allow the market to determine the exchange rate but reserve the right to intervene to "smooth" volatility. This category is where we expect to find the strongest evidence of "Fear of Floating". Following these observations, we chose to select the 2010-2015 period as it is the common period of availability and predates the covid-19 crisis that would have probably added noise to the results.
+
+```{r}
+#| label: tbl-Exchange-Rates-Regime
+#| tbl-cap: "Period of floating for studied countries"
+#| echo: false
+#| message: false
+#| warning: false
+
+exchange_regime <- 
+  read_delim("Ressources/exchange_regime.csv", 
+    delim = ";", escape_double = FALSE, trim_ws = TRUE)
+
+exchange_regime <- bind_rows(
+  exchange_regime |> 
+    select(Country = 1, Period = 2) |> 
+    mutate(Regime = "Free Floating"),
+  
+  exchange_regime |> 
+    select(Country = 3, Period = 4) |> 
+    mutate(Regime = "Floating")
+) |> 
+  filter(!is.na(Country))
+
+n <- nrow(exchange_regime)
+mid <- ceiling(n / 2)
+
+partie1 <- exchange_regime[1:mid, ]
+partie2 <- exchange_regime[(mid + 1):n, ]
+
+if (nrow(partie2) < nrow(partie1)) {
+  partie2 <- bind_rows(partie2, tibble(Country = "", Period = "", Regime = ""))
+}
+
+table_display <- bind_cols(partie1, partie2)
+
+table_display |>
+  kable(
+    format = "latex",
+    booktabs = TRUE,
+    col.names = c("Country", "Period", "Regime", "Country", "Period", "Regime"),
+    align = "l"
+  ) |>
+  kable_styling(
+    latex_options = c("hold_position"), 
+    font_size = 8 
+  ) |>
+  add_header_above(c(" " = 3, " " = 3), line = FALSE) |>
+  column_spec(3, width = "3cm") |> 
+  column_spec(4, width = "3cm")
+```
+
+# Computing a new variation threshold 
+
+In the original paper, @calvo2002fear utilized a fixed 2.5% threshold to evaluate the exchange rate stability of benchmark economies (specifically the G3 and Australia) relative to Emerging Market Economies (EMEs). By calculating the frequency of monthly fluctuations within this band, they identified significant disparities. Their findings revealed that many self-declared floaters exhibited remarkably low exchange rate variance. However, given the structural shifts in global financial markets over the last two decades, a static 2.5% band may no longer accurately define the modern standard for currency flexibility. Consequently, this study adopts an empirical strategy to endogenize the threshold based on contemporary data. Taking the historical findings as a baseline (where benchmark floaters exhibited a 60% probability of remaining within the 2.5% band), we reverse engineer this logic. We determine the specific threshold that replicates this 60% probability for our modern benchmark group, thereby establishing a data-driven flexibility benchmark to which the EMEs in our sample can be compared. We thus want to find a new threshold $x$ such that :
+$$
+P(|\Delta e _{it}|<x)= 0.60
+$$ {#eq-Prob}
+
+We apply this method for two of the original currencies, Japanese Yen (JPY) and Australian Dollar (AUD), we then substituted the German Deutsche Mark by the Euro (EUR) and added the British Pound (GBP), which we can also considered to be a strong free floating currency. We then aggregated the daily data from yahoo finance into monthly iterations using the end-of-period value[^2]. To compute the variations, we follow the tracks of the original work using the absolute value of monthly variations :
+$$
+\Delta_{e_i} = \frac{e_{it} - e_{it-1}}{e_{it-1}} \cdot 100
+$$ {#eq-Variations}
+Where $e_{it}$ is the exchange rate of country $i$ against the USD at time $t$. This metric captures the discrete relative variation of the currency, highlighting periods of significant economical stress and systemic volatility.
+
+```{r}
+#| label: Importing Benchmark data
+#| echo: false
+#| message: false
+#| warning: false
+
+Benchmark <- c("JPY", "EUR", "GBP", "AUD")
+
+Benchmark_df <- map(Benchmark, Import_DEV) |>
+  list_rbind() |>
+  pivot_wider(names_from = country, values_from = diff_price)
+
+
+
+```
+
+
+\newpage
+
+# Bibliography
+
+[^1]: Let us borrow here the wording used in @ahmed2022monetary, which is useful in both its simplicity and clarity.
+
+

@@ -1,7 +1,15 @@
 ---
-title: "Exchange volatility in times of uncertainty : is fear of floating still dominant in emerging economies ?"
+title: "Exchange volatility in times of uncertainty: is fear of floating still dominant in emerging economies?"
 author: "Tony De Amorim"
-format: pdf
+format: 
+  pdf:
+    geometry:
+      - top=20mm
+      - left=20mm
+      - right=20mm
+      - bottom=20mm
+    fontsize: 11pt
+    interlinespacing: 1.5
 bibliography: FOF2.bib
 csl: apa.csl
 ---
@@ -21,6 +29,8 @@ library(wbstats)
 library(priceR)
 library(patchwork)
 library(olsrr)
+library(yfR)
+library(zoo)
 ```
 
 ```{r}
@@ -29,22 +39,26 @@ library(olsrr)
 #| message: false
 #| warning: false
 
-Import <- function(X, date){
-  
+Import <- function(X, date) {
   df <- X
-  
+
   Ticker <- X
-  
-  df <- yf_get(tickers = Ticker, 
-                first_date = date, 
-                last_date = Sys.Date(),
-                thresh_bad_data = 0)
+
+  df <- yf_get(
+    tickers = Ticker,
+    first_date = date,
+    last_date = Sys.Date(),
+    thresh_bad_data = 0
+  )
   df <-
-  df |> 
-  select(ref_date,price_close) |> 
-  mutate(diff_price = (price_close - lag(price_close))/lag(price_close),
-         log_price = log(price_close/lag(price_close))) |> 
-  filter(!is.na(log_price), !is.na(diff_price))
+    df |>
+    select(ref_date, price_close) |>
+    mutate(
+      diff_price = (price_close / lag(price_close) - 1) * 100,
+      log_price = log(price_close / lag(price_close)),
+      diff_price_abs = abs(diff_price)
+    ) |>
+    filter(!is.na(log_price), !is.na(diff_price))
 
   return(df)
 }
@@ -56,19 +70,75 @@ Import <- function(X, date){
 #| message: false
 #| warning: false
 
-Var_Plot <- 
+Var_Plot <-
   function(df, y, Title) {
-  ggplot(df, aes(x =ref_date, y = {{y}})) +
+    ggplot(df, aes(x = ref_date, y = {{ y }})) +
+      geom_line() +
+      theme_clean(base_size = 8) +
+      labs(
+        title = Title,
+        x = "Year"
+      )
+  }
+```
+
+```{r}
+#| label: Import for devise function
+#| echo: false
+#| message: false
+#| warning: false
+
+
+Import_DEV <- function(DEV) {
+  Ticker <- str_c(DEV, "=X")
+
+  df <- yf_get(
+    tickers = Ticker,
+    first_date = "2016-01-01",
+    last_date = "2025-01-01",
+    thresh_bad_data = 0
+  )
+
+  df <- df |>
+    select(ref_date, price_close) |>
+    mutate(month = floor_date(ref_date, "month")) |>
+    group_by(month) |>
+    slice_tail(n = 1) |>
+    ungroup() |>
+    mutate(
+      diff_price = ((price_close - lag(price_close)) / lag(price_close)) * 100,
+      country = str_c("USD_", DEV)
+    ) |>
+    filter(!is.na(diff_price)) |>
+    select(month, country, diff_price)
+
+  return(df)
+}
+```
+
+```{r}
+#| label: Var plot dev function
+#| echo: false
+#| message: false
+#| warning: false
+
+Var_Plot_DEV <- function(df, name) {
+  ggplot(df, aes(x = month, y = .data[[name]])) +
     geom_line() +
-    theme_clean(base_size = 8)+
-    labs(title = Title,
-         x = "Year")
+    geom_hline(yintercept = 2.5, linetype = "dashed", color = "red", alpha = 0.6) +
+    geom_hline(yintercept = -2.5, linetype = "dashed", color = "red", alpha = 0.6) +
+    theme_clean(base_size = 8) +
+    labs(
+      title = name,
+      y = "Variation (%)",
+      x = "Date"
+    )
 }
 ```
 
 # Introduction
 
-Consistent with the work of @calvo2002fear, this essay investigates whether Emerging Markets Economies (EMEs)[^1] continue to exhibit a "Fear of Floating" during periods of global financial instability. Specifically, it examines the propensity of these nations to stabilize their exchange rates, *de facto* pegging it, to mitigate adverse macroeconomic consequences. While this work is not presented as a formal working paper, it presents graphical representations and concise analytical frameworks to make these sometimes complex economic concepts accessible to a broader audience.
+Consistent with the work of @calvo2002fear, this essay investigates whether Emerging Markets Economies (EMEs)[^1] continue to exhibit a "Fear of Floating" in a modern context. Specifically, it examines the propensity of these nations to stabilize their exchange rates, *de facto* pegging it, to mitigate adverse macroeconomic consequences. While this work is not presented as a formal working paper, it presents graphical representations and concise analytical frameworks to make these sometimes complex economic concepts accessible to a broader audience.
 
 In the original literature, "fear of floating" is characterized as a pervasive phenomenon where EMEs, despite officially adopting flexible exchange rate regimes, remain highly sensitive to currency fluctuations due to concerns regarding dollar-denominated debt and inflationary pressures. Given that this foundational research predates the COVID-19 pandemic and subsequent inflationary shocks, the persistence of such behavior twenty years later remains a critical empirical question. By benchmarking a panel of EMEs against major free-floating currencies, we analyze exchange rate variance during crises.
 
@@ -85,10 +155,10 @@ As our focus is on EMEs in periods of crisis, it is necessary to identify approp
 #| message: false
 #| warning: false
 
-VIX <- Import("^VIX", "2006-01-01")
-FFR <- Import("^IRX", "2006-01-01")
+VIX <- Import("^VIX", "2000-01-01")
+FFR <- Import("^IRX", "2000-01-01")
 
-VIX_Plot <- Var_Plot(VIX,price_close, "Evolution of the VIX over the years")
+VIX_Plot <- Var_Plot(VIX, price_close, "Evolution of the VIX over the years")
 FFR_Plot <- Var_Plot(FFR, price_close, "Evolution of the FFR over the years")
 VIX_Var_Plot <- Var_Plot(VIX, log_price, "Variation of the VIX over the years")
 FFR_Var_Plot <- Var_Plot(FFR, log_price, "Variation of the FFR over the years")
@@ -96,18 +166,62 @@ FFR_Var_Plot <- Var_Plot(FFR, log_price, "Variation of the FFR over the years")
 (VIX_Plot | FFR_Plot) / (VIX_Var_Plot | FFR_Var_Plot)
 ```
 
-
 As illustrated in @fig-VIX-evolution, both the VIX and the FFR exhibit significant fluctuations during periods of systemic stress. In 2008 during the financial then economical crisis, the FED decreased its rate at a rapid pace to mitigate the effects of the financial bubble explosion. In parallel, the VIX spiked at unprecedented heights, showcasing the widely spread fear that took over the market during that period. Similarly, the same two trends happened in 2020 with the pandemic crisis (even if the VIX reaction was less disproportionate at that time).
 
 During the 2008 Global Financial Crisis, the Federal Reserve aggressively lowered the FFR to mitigate the collapse of the housing bubble and support liquidity. In parallel, the VIX spiked to unprecedented levels, reflecting the pervasive systemic fear that characterized the period. A similar pattern emerged during the 2020 COVID-19 pandemic; while the Fed returned to the zero lower bound to stabilize the economy, the VIX surged, albeit with a shorter duration of extreme volatility compared to the 2008 episode. These inverse movements highlight the interplay between U.S. policy responses and global risk perception.
 
+
 # Benchmark countries
 
-To represent the impact of global financial crisis on EMES, we use a benchmark of countries listed as free floaters by the IMF[^4] and with strong currencies. We study the exchange rates of those countries (with their currency against the US Dollar) and precisely, the log-variation of the exchange rate, computed as follow : 
+To represent the impact of global financial instability on EMEs, we establish a benchmark of advanced economies classified as *free floaters* by the IMF. We use specifically the British Pound (GBP), Australian Dollar (AUD), Euro (EUR), Japanese Yen (JPY), Swiss Franc (CHF), and Canadian Dollar (CAD) as a control group due to their high liquidity and minimal central bank intervention. We examine the monthly percentage change of these exchange rates against the US Dollar over the 2016–2024 period, calculated as:
+
 $$
-\Delta_{e_i} = log(e_{it} - e_{it-1})
+\Delta_{e_i} = \frac{e_{it} - e_{it-1}}{e_{it-1}} \cdot 100
 $$
-Where $$e_{it}$$ is the exchange rate of country $$i$$ against the USD at time $$t$$. This transformation is useful as it highlights the main period of appreciation or depreciation, specifically during our time span of study (2016 - 2024).  
+Where $e_{it}$ is the exchange rate of country $i$ against the USD at time $t$. This metric captures the discrete relative variation of the currency, highlighting periods of significant economical stress and systemic volatility. By focusing on this specific transformation, we can directly compare our findings with the foundational "Fear of Floating" literature, particularly when observing the frequency of movements surrounding the COVID-19 shock and the subsequent global inflationary cycle. The original paper measured the degree of floating by computing the probability of having a monthly variation over 2.5\%, as this threshold may not be relevant anymore we adopted an empirical strategy to find a new one. Specifically, we defined a new upper and lower bond by forcing the fraction of monthly variation above the bond to be equal to 60\% as it is the case for the benchmark used in the paper.  
+
+```{r}
+#| label: Benchmark-variation
+#| fig-cap: "Absolute monthly variation for the benchmark countries"
+#| echo: false
+#| message: false
+#| warning: false
+
+
+
+Benchmark <- c("GBP", "JPY", "EUR", "CHF", "AUD", "CAD")
+
+Benchmark_df <- map(Benchmark, Import_DEV) |>
+  list_rbind() |>
+  pivot_wider(names_from = country, values_from = diff_price)
+
+Benchmark_Plots <- map(names(Benchmark_df)[-1], ~ Var_Plot_DEV(Benchmark_df, .x))
+wrap_plots(Benchmark_Plots, ncol = 3)
+```
+
+# EMEs results
+
+
+```{r}
+#| label: EMEs-variation
+#| fig-cap: "Absolute monthly variation for the EMEs"
+#| echo: false
+#| message: false
+#| warning: false
+
+
+
+Benchmark <- c("BRL", "MXN", "KRW", "CLP", "ZAR", "PLN")
+
+Benchmark_df <- map(Benchmark, Import_DEV) |>
+  list_rbind() |>
+  pivot_wider(names_from = country, values_from = diff_price)
+
+Benchmark_Plots <- map(names(Benchmark_df)[-1], ~ Var_Plot_DEV(Benchmark_df, .x))
+wrap_plots(Benchmark_Plots, ncol = 3)
+```
+
+
 
 \newpage
 
