@@ -1,24 +1,34 @@
 ---
-title: "Fear of Floating (Calvo and Reinhart, 2002): A Modern Perspective"
-author: "Tony De Amorim"
+title: "Learning to Float ? The Persistence of Currency Management in Emerging Markets"
+subtitle: "A Modern Perspective on Calvo and Reinhart (2002)"
+author:
+  - name: |
+      Tony De Amorim \tabularnewline
+      \small Paris-Dauphine University, PSL \tabularnewline
+      \small \href{mailto:tony.de-amorim@dauphine.eu}{Contact} -- \href{https://github.com/TonyDeAmorim}{GitHub}
+
+date: last-modified
+date-format: "MMMM YYYY"
 abstract: |
-  This essay investigates the modern persistence of "Fear of Floating" in Emerging Market Economies (EMEs). The goal is to replicate the foundational framework of Calvo and Reinhart (2002) and apply it to contemporary data while extending the original methodology. By endogenizing a new volatility threshold of 2.13% based on current benchmark currencies, the study reveals that many EMEs still stabilize their exchange rates far beyond the behavior of pure floaters. While not structured as a formal working paper, this essay employs graphical representations and concise analytical frameworks to render complex macroeconomic concepts accessible to a broader audience. 
+  This essay investigates the modern persistence of "Fear of Floating" in Emerging Countries. The goal is to replicate the framework of Calvo and Reinhart (2002) and apply it to contemporary data while extending the original methodology. By endogenizing a new volatility threshold of 2.13% based on current benchmark currencies, the study reveals that many EMEs still stabilize their exchange rates far beyond the behavior of pure floaters. While not structured as a formal working paper, this essay employs graphical representations and concise analytical frameworks to render complex macroeconomic concepts accessible to a broader audience.
+keywords: [Fear of Floating, Exchange Rate Regimes, Global Financial Cycle, Emerging Markets]
 format:
   pdf:
     geometry:
-      - left=20mm   
-      - right=20mm  
-      - top=25mm    
-      - bottom=25mm 
+      - left=25mm
+      - right=25mm
+      - top=30mm
+      - bottom=30mm
     papersize: a4
     number-sections: true
     fig-pos: 'H'
-    fontsize: 12pt
-    interlinespacing: 1.5
+    fontsize: 11pt
+    interlinespacing: 1.2
+    indent: true
 bibliography: FOF2.bib
 csl: apa.csl
-
 ---
+
 \newpage
 
 ```{r}
@@ -101,9 +111,6 @@ Var_Plot_DEV <- function(df, name, tr) {
 ```
 
 # Introduction
-
-
-In the original literature, *Fear of Floating* is characterized as a phenomenon where EMEs, despite officially adopting flexible exchange rate regimes, remain highly sensitive to currency fluctuations due to concerns regarding dollar-denominated debt and inflationary pressures. Given that this foundational research predates numerous periods of financial distress and subsequent inflationary shocks, the persistence of such behavior twenty years later remains a critical empirical question. By benchmarking a panel of EMEs against major free-floating currencies, we analyze exchange rate variance, comparing declared exchange regime to the realty.
 
 
 Consistent with the work of @calvo2002fear, this short essay examines whether Emerging Market Economies (EMEs)[^1] continue to demonstrate a "Fear of Floating" within a contemporary setting. Specifically, it analyzes the propensity of these nations to stabilize their exchange rates through *de facto* management to mitigate adverse macroeconomic consequences. While not structured as a formal working paper, this work employs graphical representations and a concise analytical framework to render complex economic concepts accessible to a broader audience.
@@ -208,16 +215,17 @@ threshold_comparison <- threshold_comparison |>
 ```
 
 
-In their seminal work, Calvo and Reinhart (2002) utilized a fixed 2.5% threshold to evaluate the exchange rate stability of benchmark economies (specifically the G3 and Australia) relative to EMEs. By calculating the frequency of monthly fluctuations within this band, they identified significant disparities. Their findings revealed that many self-declared floaters exhibited remarkably low exchange rate variance. However, given the structural shifts in global financial markets over the last two decades, a static 2.5% band may no longer accurately define the modern standard for currency flexibility. Consequently, this study adopts an empirical strategy to endogenize the threshold based on contemporary data. Taking the historical findings as a baseline (where benchmark floaters exhibited a 60% probability of remaining within the 2.5% band), we reverse engineer this logic. We determine the specific threshold that replicates this 60% probability for each of our modern benchmark group and then take the average, thereby establishing a data-driven flexibility benchmark to which the EMEs in our sample can be compared. We thus seek to identify a new threshold x such that:
+In their seminal work, Calvo and Reinhart (2002) utilized a fixed 2.5% threshold to evaluate the exchange rate stability of benchmark economies (specifically the G3 and Australia) relative to EMEs. By calculating the frequency of monthly fluctuations within this band, they identified significant disparities. Their findings revealed that many self-declared floaters exhibited remarkably low exchange rate variance. However, given the structural shifts in global financial markets over the last two decades, a static 2.5% band may no longer accurately define the modern standard for currency flexibility. Consequently, this essay adopts an empirical strategy to endogenize the threshold based on contemporary data. Taking the historical findings as a baseline (where benchmark floaters exhibited a 60% probability of remaining within the 2.5% band), we reverse engineer this logic. We determine the specific threshold that replicates this 60% probability for each of our modern benchmark group and then take the average, thereby establishing a data-driven flexibility benchmark to which the EMEs in our sample can be compared. We thus seek to identify a new threshold $x$ such that:
 $$
 P(|\Delta e _{it}|<x)= 0.60
 $$ {#eq-Prob}
 
-We apply this method to two of the original currencies, the Japanese Yen (JPY) and the Australian Dollar (AUD). We substituted the German Deutsche Mark with the Euro (EUR) and incorporated the British Pound (GBP), which is widely considered a robust free-floating currency. Daily data from Yahoo Finance were aggregated into monthly iterations using the end-of-period value. To compute the variations, we follow the framework of the original work by using the absolute value of monthly changes:
+Where $e_{it}$ represents the exchange rate of country $i$ against the USD at time $t$. We apply this method to two of the original currencies, the Japanese Yen (JPY) and the Australian Dollar (AUD). We substituted the German Deutsche Mark with the Euro (EUR) and incorporated the British Pound (GBP), which is widely considered a robust free-floating currency. Daily data from Yahoo Finance were aggregated into monthly iterations using the end-of-period value. To compute the variations, we follow the framework of the original work by using the absolute value of monthly changes:
 $$
 \Delta_{e_i} = \frac{e_{it} - e_{it-1}}{e_{it-1}} \cdot 100
 $$ {#eq-Variations}
-Where $e_{it}$ represents the exchange rate of country $i$ against the USD at time $t$. This metric captures the discrete relative variation of the currency, highlighting periods of significant economical stress and systemic volatility. After using our method and using the 60% probability as a first estimate, we obtain a 2.13% threshold and represented it for our benchmark on @fig-Benchmark-variation.
+
+This metric captures the discrete relative variation of the exchange rate, serving as a proxy for financial stress. Higher percentage changes reflect increased exchange rate volatility, which is defined as the dispersion of price movements around their mean. By focusing on relative rather than absolute changes, this measure ensures comparability across different currency pairs regardless of their nominal price levels. After using our method and using the 60% probability as a first estimate, we obtain a 2.13% threshold and represented it for our benchmark on @fig-Benchmark-variation.
 
 ```{r}
 #| label: fig-Benchmark-variation
@@ -354,9 +362,9 @@ Benchmark_stability_multi <- Benchmark_df |>
   arrange(desc(p_60))
 ```
 
-We apply our baseline threshold of 2.13% to the Emerging Market Economies (EMEs). The graphical representations for both floaters and free floaters, provided in the [Appendix](#sec-one), reveal highly heterogeneous patterns of variation. The core objective of this analysis is to compute the probability of each EME remaining within this 2.13% band to allow for a direct comparison with the original findings of @calvo2002fear. To ensure the robustness of our results across different specifications, we further calculate these probabilities using alternative benchmarks at the 55% and 65% quantiles (yielding thresholds of 1.80% and 2.33%, respectively). Finally, we include the original 2.5% band as a historical reference. Our results are detailed in @tbl-Probability-calcul. 
+We apply our baseline threshold of 2.13% to the Emerging Market Economies (EMEs). The graphical representations for both floaters and free floaters, provided in the [Appendix](#sec-one), reveal highly heterogeneous patterns of variation. The core objective of this analysis is to compute the probability of each EME remaining within this 2.13% band to allow for a direct comparison with the original findings of Calvo and Reinhart (2002).The selection of the 55% and 65% quantiles provides a symmetrical ±5% interval around our primary 60% baseline, allowing for a rigorous sensitivity test of the results. This approach establishes a volatility gradient that captures the persistence of stability patterns across varying degrees of strictness. While the 55% quantile (1.80%) imposes a highly restrictive definition to test the most intense instances of currency management, the 65% quantile (2.33%) ensures the findings remain consistent as the threshold approaches the historical 2.50% mark. By demonstrating that the divergence between Benchmarks and Floaters holds across this range, we confirm that our observations reflect a structural policy stance rather than a specific artifact of the primary threshold. Finally, we include the original 2.5% band as a historical reference. Our results are detailed in @tbl-Probability-calcul. 
 
-Our findings indicate that Free Floaters maintain results largely consistent with the Benchmark group across all specifications. However, they systematically display lower average volatility, suggesting a latent tendency toward exchange rate management despite their official status. In contrast, the Floaters group exhibits significant heterogeneity. Such dispersion is expected, as country-specific factors heavily influence individual exchange rate dynamics. The contrast between countries like Kenya and Mexico highlights the fundamental heterogeneity within the Floaters group. On one hand, the 'Rigid Anchor' profile (Kenya, Philippines) maintains stability levels that surpass even the most stable Benchmarks, hinting at a structural *Fear of Floating*. On the other hand, the 'Progressive Flexibility' profile (Mexico, Chile) demonstrates that certain EMEs have successfully integrated exchange rate volatility as a functional economic tool. This divergence suggests that the decision to manage a currency is less about the official regime and more about specific domestic vulnerabilities, such as high pass-through to inflation or external debt levels.
+Our findings indicate that Free Floaters maintain results largely consistent with the Benchmark group across all specifications. However, they systematically display lower average volatility, suggesting a latent tendency toward exchange rate management despite their official status. In contrast, the Floaters group exhibits significant heterogeneity. Such dispersion is expected, as country-specific factors heavily influence individual exchange rate dynamics. On one hand, the 'Rigid Anchor' profile (Kenya, Philippines) maintains stability levels that surpass even the most stable Benchmarks, hinting at a structural *Fear of Floating*. On the other hand, the 'Progressive Flexibility' profile (Mexico, Chile) demonstrates that certain EMEs have successfully integrated exchange rate volatility as a functional economic tool. This divergence suggests that the decision to manage a currency is less about the official regime and more about specific domestic vulnerabilities, such as high pass-through to inflation or external debt levels.
 
 
 ```{r}
@@ -439,13 +447,12 @@ tab_final |>
 )
 ```
 
-@tbl-Comp-calcul presents the variations in stability probabilities for the 2.5% threshold between the original results of @calvo2002fear and our contemporary findings, categorized by the nature of regime transitions. As expected, every group exhibits a decrease in stability i.e increase in volatility. This shift is most pronounced for currencies that either transitioned to or maintained a free-floating regime. Conversely, countries that moved toward more managed arrangements experienced the least severe decline in stability, reflecting their increased efforts to dampen exchange rate fluctuations. 
 
 # Revisiting the Trilemma through the Global Financial Cycle
 
-The empirical findings presented in the previous sections must be interpreted within the evolving framework of international macroeconomics. Traditionally, the Impossible Trinity (or trilemma), as established in @mundell1963capital, suggests that a flexible exchange rate regime should provide a nation with the necessary latitude to maintain monetary policy independence in a context of free capital movement. However, this traditional view has been challenged with the emergence of a literature about the Global Financial Cycle. 
+The empirical results must be interpreted within the evolving framework of international macroeconomics. While the classical Impossible Trinity of @mundell1963capital suggests that flexible exchange rates grant monetary independence under free capital movement, recent literature on the Global Financial Cycle challenges this view. @rey2015dilemma argues that the international system faces a dilemma rather than a trilemma, as exchange rate flexibility fails to provide autonomy when global credit conditions and capital flows are driven by a single global factor. Closely tied to the US monetary policy stance and global risk aversion, this factor creates a significant constraint for EMEs. As @miranda2020us demonstrates, the US dollar acts as the primary engine for this cycle, exposing even floating regimes to imported volatility regardless of their domestic fundamentals. 
 
-@rey2015dilemma famously argues that the international monetary system faces a dilemma rather than a trilemma. According to this perspective, exchange rate flexibility does not grant monetary autonomy when global credit conditions and capital flows are driven by a single global factor. This factor is closely tied to the monetary policy stance of the United States and the fluctuations of global risk aversion. For Emerging Market Economies (EMEs), this environment creates a significant constraint. As demonstrated by @miranda2020us, the US dollar serves as the primary engine for this global cycle, influencing cross-border banking flows and international leverage. Consequently, even when countries adopt a floating regime, they remain exposed to imported volatility that is independent of their domestic economic fundamentals. This theoretical shift provides a crucial context for the results displayed in @tbl-Comp-calcul. The systematic decrease in stability probabilities across all groups confirms that the contemporary financial environment is inherently more volatile than the period studied by @calvo2002fear.
+This theoretical shift provides the crucial context for the results in @tbl-Comp-calcul, which compares contemporary stability probabilities at the 2.5% threshold with the original findings of @calvo2002fear. The systematic decrease in stability across all groups confirms that the modern financial environment is inherently more volatile than in the early 2000s. While every category exhibits increased volatility, the shift is most pronounced for currencies that transitioned to or maintained a free-floating regime. Conversely, countries moving toward managed arrangements experienced the least severe declines, reflecting deliberate policy efforts to dampen the fluctuations driven by this global cycle.
 
 ```{r}
 #| label: tbl-Comp-calcul
@@ -499,11 +506,13 @@ transition_summary |>
 
 ```
 
-The limitations of a fixed 2.5% threshold are particularly evident when considering the heightened sensitivity of Emerging Market Economies (EMEs) to external shocks. As @arora2001how demonstrated, changes in U.S. monetary policy transmit directly to emerging markets through sovereign spreads, creating a financial vulnerability that persists regardless of the official exchange rate regime. Given that dependency on dollar-denominated debt remains pervasive, the baseline volatility of the global economy has shifted significantly since the early 2000s. Consequently, relying on a static 2.5% benchmark fails to account for these structural changes and the increased sophistication of modern currency management. By endogenizing our thresholds at 2.13%, we move away from an arbitrary historical figure to define *Fear of Floating* relative to contemporary market conditions. This approach ensures that our results capture the actual policy intent of central banks rather than simply measuring their distance from an outdated international norm. These tighter bands provide a more nuanced detection of currency management, as shown in @tbl-Probability-calcul. A striking divergence emerges: while benchmark currencies see their stability probabilities drop sharply as the threshold narrows, a subset of floaters, most notably Kenya and the Philippines, maintain remarkably high stability. This suggests that these central banks are not merely preventing extreme devaluations but are actively smoothing even minor fluctuations. By defining *Fear of Floating* relative to the actual behavior of pure floaters in the contemporary era, we demonstrate that the intensity of currency management in certain EMEs is significantly higher than a static historical reference would suggest. 
+The limitations of a fixed 2.5% threshold are particularly evident when considering the heightened sensitivity of EMEs to external shocks. As @arora2001how demonstrated, changes in U.S. monetary policy transmit directly to emerging markets through sovereign spreads, creating a financial vulnerability that persists regardless of the official exchange rate regime. Given that dependency on dollar-denominated debt remains pervasive, the baseline volatility of the global economy has shifted significantly since the early 2000s. Consequently, relying on a static 2.5% benchmark fails to account for these structural changes and the increased sophistication of modern currency management. By endogenizing our thresholds at 2.13%, we move away from an arbitrary historical figure to define *Fear of Floating* relative to contemporary market conditions. This approach ensures that our results capture the actual policy intent of central banks rather than simply measuring their distance from an outdated international norm. 
+
+These tighter bands provide a more nuanced detection of currency management, as shown in @tbl-Probability-calcul. A striking divergence emerges: while benchmark currencies see their stability probabilities drop sharply as the threshold narrows, a subset of floaters, most notably Kenya and the Philippines, maintain remarkably high stability. This suggests that these central banks are not merely preventing extreme devaluations but are actively smoothing even minor fluctuations. By defining *Fear of Floating* relative to the actual behavior of pure floaters in the contemporary era, we highlight that the intensity of currency management in certain EMEs is significantly higher than a static historical reference would suggest. 
 
 # Concluding Remarks
 
-The persistence of *Fear of Floating* remains a defining characteristic of the modern international monetary system, though its manifestation has evolved since the early 2000s. By endogenizing the variation threshold to 2.13%, this study reveals that while global volatility has increased, many Emerging Market Economies (EMEs) continue to actively smooth exchange rate fluctuations far beyond the behavior of pure floaters. The data highlights a stark divergence between "Rigid Anchors" like Kenya and the Philippines, which maintain high stability, and "Progressive Flexibles" like Mexico and Chile, which have better integrated currency swings. These findings support the shift from a traditional trilemma to a monetary dilemma, where the Global Financial Cycle and US dollar dominance constrain domestic autonomy regardless of the official regime. Ultimately, currency management in the contemporary era is driven less by official labels and more by structural vulnerabilities and the necessity to mitigate imported shocks.
+The persistence of *Fear of Floating* remains a defining characteristic of the modern international monetary system, though its manifestation has evolved since the early 2000s. By endogenizing the variation threshold to 2.13%, this study reveals that while global volatility has increased, many EMEs continue to actively smooth exchange rate fluctuations beyond the behavior of pure floaters. The data highlights an important divergence between "Rigid Anchors" like Kenya and the Philippines, which maintain high stability, and "Progressive Flexibles" like Mexico and Chile, which have better integrated currency variations. These findings support the shift from a traditional trilemma to a monetary dilemma, where the Global Financial Cycle and US dollar dominance constrain domestic autonomy regardless of the official regime. Ultimately, currency management in the contemporary era is driven less by official labels and more by structural vulnerabilities and the necessity to mitigate imported shocks.
 
 Despite the insights gained from this analysis, several limitations should be noted. The reliance on a specific 2010–2018 window ensures data consistency but excludes the unprecedented volatility introduced by the global pandemic and recent inflationary shocks. Furthermore, while the absolute value of monthly exchange rate changes effectively captures discrete variation, it does not explicitly differentiate between market-driven depreciation and active policy intervention. Future extensions of this work could incorporate central bank reserve accumulation data to provide a more direct measure of intervention efforts. Additionally, expanding the analytical framework to include interest rate volatility would offer a more comprehensive view of how EMEs utilize multiple policy instruments to manage external pressures within the Global Financial Cycle.
 
